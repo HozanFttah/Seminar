@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seminar Room Calendar</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #e0e7ff;
+            --danger-color: #f72585;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --light-bg: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-color: #2b2d42;
+            --text-light: #6c757d;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            background-color: #f5f7fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .month-year {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .day-header {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 10px 5px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .calendar-day {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            min-height: 100px;
+            padding: 10px;
+            position: relative;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .day-number {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+        
+        .today .day-number {
+            color: white;
+            background: var(--primary-color);
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+        }
+        
+        .event {
+            background-color: var(--primary-light);
+            border-left: 3px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 6px;
+            margin: 4px 0;
+            font-size: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        .event:hover {
+            background-color: #d1d9ff;
+            transform: translateX(2px);
+        }
+        
+        .delete-event {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            line-height: 16px;
+            cursor: pointer;
+            display: none;
+            transition: var(--transition);
+        }
+        
+        .event:hover .delete-event {
+            display: block;
+        }
+        
+        .delete-event:hover {
+            background-color: #d90429;
+            transform: scale(1.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background-color: white;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        button.secondary:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        button.danger {
+            background-color: var(--danger-color);
+        }
+        
+        button.danger:hover {
+            background-color: #d90429;
+        }
+        
+        .status-bar {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-available {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .status-booked {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .next-event {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .modal-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .file-ops {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .file-ops button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        #file-status {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-left: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-day {
+                min-height: 80px;
+            }
+            
+            .day-number {
+                font-size: 0.8rem;
+            }
+            
+            .event {
+                font-size: 0.7rem;
+                padding: 4px;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .calendar-day {
+                min-height: 70px;
+                padding: 8px;
+            }
+            
+            .day-header {
+                font-size: 0.75rem;
+                padding: 8px 2px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .file-ops {
+                text-align: center;
+            }
+            
+            .file-ops button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            #file-status {
+                display: block;
+                margin: 10px 0 0;
+                text-align: center;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header-container" style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem;">
+            <img src="logo.jpg" alt="Company Logo" style="height: 120px;">
+            <h1>Seminar Room Availability</h1>
+        </div>
+        
+        <div class="calendar-header">
+            <div class="month-year" id="current-month">May 2025</div>
+            <div class="nav-buttons">
+                <button class="secondary" id="prev-month">←</button>
+                <button class="secondary" id="next-month">→</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="today-btn">Today</button>
+            <button id="add-event">+ Add Booking</button>
+        </div>
+        
+        <div class="calendar-grid" id="calendar-header">
+            <div class="day-header">Sun</div>
+            <div class="day-header">Mon</div>
+            <div class="day-header">Tue</div>
+            <div class="day-header">Wed</div>
+            <div class="day-header">Thu</div>
+            <div class="day-header">Fri</div>
+            <div class="day-header">Sat</div>
+        </div>
+        
+        <div class="calendar-grid" id="calendar"></div>
+        
+        <div class="status-bar">
+            <div>
+                <strong>Current Status:</strong> 
+                <span class="status-indicator status-available" id="current-status">Available</span>
+            </div>
+            <div class="next-event" id="next-event-info"></div>
+        </div>
+        
+        <div class="file-ops">
+            <button id="save-data">Save Data</button>
+            <button id="load-data">Refresh Data</button>
+            <span id="file-status">Connected to cloud</span>
+        </div>
+    </div>
+    
+    <!-- Add Event Modal -->
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-title">Add New Booking</div>
+            <form id="event-form">
+                <div class="form-group">
+                    <label for="event-title">Title</label>
+                    <input type="text" id="event-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-date">Date</label>
+                    <input type="date" id="event-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-start">Start Time</label>
+                    <input type="time" id="event-start" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-end">End Time</label>
+                    <input type="time" id="event-end" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary" id="cancel-event">Cancel</button>
+                    <button type="submit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+<script>
+    // Data storage and initialization
+    let events = [];
+    let currentDate = new Date();
+    let previousDataHash = '';
+    let refreshInterval;
+    const SERVER_URL = window.location.origin;
+
+    // DOM Elements
+    const calendarEl = document.getElementById('calendar');
+    const currentMonthEl = document.getElementById('current-month');
+    const currentStatusEl = document.getElementById('current-status');
+    const nextEventInfoEl = document.getElementById('next-event-info');
+    const eventModalEl = document.getElementById('event-modal');
+    const eventFormEl = document.getElementById('event-form');
+    const fileStatusEl = document.getElementById('file-status');
+
+    // Basic Auth credentials
+    const authString = btoa('dan:Bluecoffee@win2025');
+    const authHeaders = {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/json'
+    };
+
+    // Format date as YYYY-MM-DD
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Calculate hash for data comparison
+    function calculateDataHash(data) {
+        return JSON.stringify(data.map(event => ({
+            id: event.id,
+            date: event.date,
+            startTime: event.startTime,
+            endTime: event.endTime
+        })));
+    }
+
+    // Initialize calendar
+    function renderCalendar() {
+        calendarEl.innerHTML = '';
+        
+        // Set month header
+        currentMonthEl.textContent = currentDate.toLocaleString('default', { 
+            month: 'long', 
+            year: 'numeric' 
+        });
+        
+        // Get first day of month and total days
+        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const today = new Date();
+        
+        // Add empty cells for days before the first day
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            calendarEl.appendChild(document.createElement('div'));
+        }
+        
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            
+            // Check if this is today
+            const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            if (thisDate.toDateString() === today.toDateString()) {
+                dayEl.classList.add('today');
+            }
+            
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayEl.appendChild(dayNumber);
+            
+            // Format date for comparison
+            const dateStr = formatDate(thisDate);
+            
+            // Add events for this day
+            const dayEvents = events.filter(event => event.date === dateStr);
+            dayEvents.sort((a, b) => a.startTime.localeCompare(b.startTime));
+            
+            dayEvents.forEach(event => {
+                const eventEl = document.createElement('div');
+                eventEl.className = 'event';
+                eventEl.innerHTML = `
+                    ${event.startTime}-${event.endTime}: ${event.title}
+                    <button class="delete-event" data-id="${event.id}">×</button>
+                `;
+                dayEl.appendChild(eventEl);
+                
+                // Add delete event listener
+                eventEl.querySelector('.delete-event').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this event?')) {
+                        try {
+                            const response = await fetch(`${SERVER_URL}/api/data/${event.id}`, {
+                                method: 'DELETE',
+                                headers: authHeaders
+                            });
+                            if (!response.ok) throw new Error('Delete failed');
+                            events = events.filter(ev => ev.id !== event.id);
+                            renderCalendar();
+                            updateStatusBar();
+                        } catch (err) {
+                            console.error('Delete error:', err);
+                            alert('Failed to delete event');
+                        }
+                    }
+                });
+            });
+            
+            calendarEl.appendChild(dayEl);
+        }
+    }
+
+    // Update the status bar
+    function updateStatusBar() {
+        const now = new Date();
+        const todayStr = formatDate(now);
+        const currentTime = now.toTimeString().substr(0, 5);
+        
+        // Check current events
+        const currentEvents = events.filter(event => 
+            event.date === todayStr && 
+            event.startTime <= currentTime && 
+            event.endTime >= currentTime
+        );
+        
+        if (currentEvents.length > 0) {
+            currentStatusEl.textContent = 'Booked';
+            currentStatusEl.className = 'status-indicator status-booked';
+            nextEventInfoEl.textContent = `Booked: ${currentEvents[0].title} until ${currentEvents[0].endTime}`;
+        } else {
+            currentStatusEl.textContent = 'Available';
+            currentStatusEl.className = 'status-indicator status-available';
+            
+            // Find next event
+            const futureEvents = events
+                .filter(event => event.date > todayStr || 
+                      (event.date === todayStr && event.startTime > currentTime))
+                .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+            
+            nextEventInfoEl.textContent = futureEvents.length > 0 
+                ? `Next: ${futureEvents[0].title} at ${futureEvents[0].startTime} (${futureEvents[0].date})` 
+                : 'No upcoming bookings';
+        }
+    }
+
+    // Fetch events with optimization
+    async function fetchEvents() {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/data?t=${Date.now()}`, {
+                headers: authHeaders
+            });
+            if (!response.ok) throw new Error('Server error');
+            const newEvents = await response.json();
+            
+            const currentHash = calculateDataHash(newEvents);
+            if (currentHash !== previousDataHash) {
+                events = newEvents;
+                previousDataHash = currentHash;
+                renderCalendar();
+                updateStatusBar();
+                fileStatusEl.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            fileStatusEl.textContent = 'Error refreshing data (retrying...)';
+        }
+    }
+
+    // Save events to server
+    async function saveEvents() {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/data`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(events)
+            });
+            if (!response.ok) throw new Error('Save failed');
+            fileStatusEl.textContent = `Saved: ${new Date().toLocaleTimeString()}`;
+            updateStatusBar();
+        } catch (error) {
+            console.error('Save error:', error);
+            fileStatusEl.textContent = 'Error saving data';
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('prev-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    document.getElementById('next-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    document.getElementById('today-btn').addEventListener('click', () => {
+        currentDate = new Date();
+        renderCalendar();
+    });
+
+    document.getElementById('add-event').addEventListener('click', () => {
+        document.getElementById('event-date').value = formatDate(new Date());
+        document.getElementById('event-title').value = '';
+        document.getElementById('event-start').value = '09:00';
+        document.getElementById('event-end').value = '10:00';
+        eventModalEl.style.display = 'flex';
+    });
+
+    document.getElementById('cancel-event').addEventListener('click', (e) => {
+        e.preventDefault();
+        eventModalEl.style.display = 'none';
+    });
+
+    eventFormEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const newEvent = {
+            id: Date.now(),
+            title: document.getElementById('event-title').value.trim(),
+            date: document.getElementById('event-date').value,
+            startTime: document.getElementById('event-start').value,
+            endTime: document.getElementById('event-end').value
+        };
+        
+        // Validation
+        if (!newEvent.title) {
+            alert('Please enter a title for the event');
+            return;
+        }
+        
+        if (newEvent.startTime >= newEvent.endTime) {
+            alert('End time must be after start time');
+            return;
+        }
+        
+        // Check for time conflicts
+        const hasConflict = events.some(event => 
+            event.date === newEvent.date &&
+            !(newEvent.endTime <= event.startTime || newEvent.startTime >= event.endTime)
+        );
+        
+        if (hasConflict) {
+            alert('This time slot is already booked');
+            return;
+        }
+        
+        // Add and save
+        events.push(newEvent);
+        await saveEvents();
+        eventModalEl.style.display = 'none';
+        renderCalendar();
+    });
+
+    eventModalEl.addEventListener('click', (e) => {
+        if (e.target === eventModalEl) {
+            eventModalEl.style.display = 'none';
+        }
+    });
+
+    document.getElementById('save-data').addEventListener('click', saveEvents);
+    document.getElementById('load-data').addEventListener('click', fetchEvents);
+
+    // Initialize with auto-refresh
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initial load
+        fetchEvents();
+        
+        // Auto-refresh every 5 seconds
+        refreshInterval = setInterval(fetchEvents, 5000);
+        
+        // Status bar updates every minute
+        setInterval(updateStatusBar, 60000);
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            clearInterval(refreshInterval);
+        });
+    });
+</script>
+</body>
+</html>
